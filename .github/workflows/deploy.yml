@@ -25,3 +25,18 @@ jobs:
 
     - name: Run Docker container
       run: docker run -e CI=true tolaat/docker-react npm run test
+
+    - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+    
+    - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: frontend
+          environment_name: Frontend-env
+          existing_bucket_name: elasticbeanstalk-us-west-2-160569206162
+          region: us-west-2
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
