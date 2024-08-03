@@ -2,24 +2,14 @@ name: Deploy Frontend
 on:
   push:
     branches:
-      - main # check your repo, your default branch might be master!
+      - main
+
 jobs:
-  build-and-run:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Log in to DockerHub
-      uses: docker/login-action@v3 
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
+    - uses: actions/checkout@v3
+    - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
     - name: Build Docker image
       run: docker build -t tolaat/docker-react -f Dockerfile.dev .
 
@@ -28,15 +18,13 @@ jobs:
 
     - name: Generate deployment package
       run: zip -r deploy.zip . -x '*.git*'
-    
+
     - name: Deploy to EB
-      uses: einaregilsson/beanstalk-deploy@v21
+      uses: einaregilsson/beanstalk-deploy@v18
       with:
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
         application_name: frontend
         environment_name: Frontend-env
-        existing_bucket_name: elasticbeanstalk-us-west-2-160569206162
-        region: us-west-2
+        existing_bucket_name: e. ,lasticbeanstalk-us-west-2-160569206162
+        region: us-east-1
         version_label: ${{ github.sha }}
         deployment_package: deploy.zip
