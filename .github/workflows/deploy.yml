@@ -31,13 +31,14 @@ jobs:
 
     - name: Deploy to Elastic Beanstalk
       run: |
+        VERSION_LABEL=$(date +%Y%m%d%H%M%S)
+        
         aws elasticbeanstalk create-application-version \
           --application-name frontend \
-          --version-label ${{ github.sha }} \
-          --source-bundle S3Bucket=elasticbeanstalk-us-west-2-160569206162,S3Key=deploy.zip \
-          --use-existing-version-if-available
-
+          --version-label $VERSION_LABEL \
+          --source-bundle S3Bucket=elasticbeanstalk-us-west-2-160569206162,S3Key=deploy.zip
+          
         aws elasticbeanstalk update-environment \
           --application-name frontend \
           --environment-name Frontend-env \
-          --version-label ${{ github.sha }}
+          --version-label $VERSION_LABEL
