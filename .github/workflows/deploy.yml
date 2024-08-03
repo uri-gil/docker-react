@@ -19,14 +19,25 @@ jobs:
     - name: Generate deployment package
       run: zip -r deploy.zip . -x '*.git*'
 
-    - name: Deploy to EB
-      uses: einaregilsson/beanstalk-deploy@v21
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v3
       with:
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
-        application_name: frontend
-        environment_name: Frontend-env
-        existing_bucket_name: elasticbeanstalk-us-west-2-160569206162
-        region: us-west-2
-        version_label: ${{ github.sha }}
-        deployment_package: deploy.zip
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: us-west-2
+
+    - name: Upload to S3
+      run: aws s3 cp deploy.zip s3://elasticbeanstalk-us-west-2-160569206162/deploy.zip
+
+    - name: Deploy to Elastic Beanstalk
+      run: |
+        aws elasticbeanstalk create-application-version \
+          --application-name frontend \
+          --version-label ${{ github.sha }} \
+          --source-bundle S3Bucket=elasticbeanstalk-us-west-2-160569206162,S3Key=deploy.zip \
+          --use-existing-version-if-available
+
+        aws elasticbeanstalk update-environment \
+          --application-name frontend \
+          --environment-name Frontend-env \
+          --version-label ${{ github.sha }}
